@@ -16,7 +16,7 @@ function fromHTML(html, trim = true) {
     return result;
 }
 
-const updateFilterList = (filters) => {
+const updatePopupFilterList = (filters) => {
     const filtersList = document.getElementById("gh-filters-list")
     while (filtersList.firstChild) {
         filtersList.removeChild(filtersList.lastChild);
@@ -36,47 +36,47 @@ const updateFilterList = (filters) => {
     }
 }
 
-const deleteFilter = async (filterName) => {
+const getCurrentFilters = async () => {
     const result = await chrome.storage.local.get(STORAGE_KEY);
-    let existingFilters = result[STORAGE_KEY]?.filters ?? []
-    const updatedFilters = {
-        filters: existingFilters.filter((filter) => filter.name !== filterName),
-    }
+    return result[STORAGE_KEY]?.filters ?? [];
+}
+
+const updateFilters = async (newFilters) => {
     await chrome.storage.local.set({
-        [STORAGE_KEY]: updatedFilters
+        [STORAGE_KEY]: newFilters
     });
     const filtersAfterUpdate = (await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY]?.filters ?? [];
-    updateFilterList(filtersAfterUpdate);
+    updatePopupFilterList(filtersAfterUpdate);
+}
+
+const deleteFilter = async (filterName) => {
+    const currentFilters = await getCurrentFilters();
+    const newFilters = {
+        filters: currentFilters.filter((filter) => filter.name !== filterName),
+    }
+    await updateFilters(newFilters);
 }
 
 const createNewFilter = async () => {
     const name = document.getElementById("filter-name").value;
     const ghQueryString = document.getElementById("filter-query").value;
 
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    console.log("filters before update: ", JSON.stringify(result))
-    console.log(JSON.stringify(result));
-
-    let existingFilters = result[STORAGE_KEY]?.filters ?? []
-    const updatedFilters = {
+    const filters = await getCurrentFilters();
+    const newFilters = {
         filters: [
-            ...existingFilters,
+            ...filters,
             {
                 name,
                 ghQueryString
             }
         ]
     }
-    await chrome.storage.local.set({
-        [STORAGE_KEY]: updatedFilters
-    });
-    const filtersAfterUpdate = (await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY]?.filters ?? [];
-    updateFilterList(filtersAfterUpdate);
+    await updateFilters(newFilters);
 }
 
 (async () => {
     const filters = (await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY]?.filters ?? [];
-    updateFilterList(filters);
+    updatePopupFilterList(filters);
     // TODO: Run replacement of filters to avoid having to reload page
 })();
 
