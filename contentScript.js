@@ -30,10 +30,11 @@ function fromHTML(html, trim = true) {
 const mo = new MutationObserver(onMutation);
 observe();
 
+
 async function onMutation() {
     if (document.querySelector("nav.subnav-links")) {
         mo.disconnect();
-        await replaceDefaultFilters();
+        await refreshFilters();
         observe();
     }
 }
@@ -45,9 +46,14 @@ function observe() {
     });
 }
 
-async function replaceDefaultFilters() {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+    if (request.message === "filters-changed") {
+        await refreshFilters();
+    }
+});
+
+async function refreshFilters() {
     const filters = (await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY]?.filters ?? [];
-    console.log(JSON.stringify(filters));
     const filterLinks = document.querySelector("nav.subnav-links");
     if (filterLinks !== null && filters.length !== 0) {
         while (filterLinks.firstChild) {

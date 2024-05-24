@@ -26,7 +26,7 @@ const updatePopupFilterList = (filters) => {
     for (const filter of filters) {
         const deleteButtonId = `delete-${filter.id}`;
         filtersList.appendChild(fromHTML(
-            `
+                `
             <li>
                 <p>${filter.name}</p>
                 <pre>${filter.ghQueryString}</pre>
@@ -36,6 +36,11 @@ const updatePopupFilterList = (filters) => {
         );
         document.getElementById(deleteButtonId).addEventListener("click", () => deleteFilter(filter.id));
     }
+}
+
+const notifyContentScriptAboutFilterUpdate = async () => {
+    const [tab] = await chrome.tabs.query({active: true, lastFocusedWindow: true});
+    await chrome.tabs.sendMessage(tab.id, {message: "filters-changed"});
 }
 
 const getCurrentFilters = async () => {
@@ -57,6 +62,7 @@ const deleteFilter = async (filterId) => {
         filters: currentFilters.filter((filter) => filter.id !== filterId),
     }
     await updateFilters(newFilters);
+    await notifyContentScriptAboutFilterUpdate();
 }
 
 const createNewFilter = async () => {
@@ -75,12 +81,12 @@ const createNewFilter = async () => {
         ]
     }
     await updateFilters(newFilters);
+    await notifyContentScriptAboutFilterUpdate();
 }
 
 (async () => {
     const filters = (await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY]?.filters ?? [];
     updatePopupFilterList(filters);
-    // TODO: Run replacement of filters to avoid having to reload page
 })();
 
 document.getElementById("new-filter-button").addEventListener("click", createNewFilter);
