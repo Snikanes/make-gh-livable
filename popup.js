@@ -66,8 +66,8 @@ const deleteFilter = async (filterId) => {
 }
 
 const createNewFilter = async () => {
-    const name = document.getElementById("filter-name").value;
-    const ghQueryString = document.getElementById("filter-query").value;
+    const nameInput = document.getElementById("filter-name");
+    const queryStringInput = document.getElementById("filter-query");
 
     const filters = await getCurrentFilters();
     const newFilters = {
@@ -75,13 +75,16 @@ const createNewFilter = async () => {
             ...filters,
             {
                 id: generateUniqueId(),
-                name,
-                ghQueryString
+                name: nameInput.value,
+                ghQueryString: queryStringInput.value
             }
         ]
     }
     await updateFilters(newFilters);
     await notifyContentScriptAboutFilterUpdate();
+
+    nameInput.value = '';
+    queryStringInput.value = '';
 }
 
 (async () => {
