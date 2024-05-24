@@ -1,5 +1,7 @@
 const STORAGE_KEY = "gh-custom-filters"
 
+const generateUniqueId = () => Math.random().toString(36).substr(2, 9);
+
 function fromHTML(html, trim = true) {
     // Process the HTML string.
     html = trim ? html.trim() : html;
@@ -22,7 +24,7 @@ const updatePopupFilterList = (filters) => {
         filtersList.removeChild(filtersList.lastChild);
     }
     for (const filter of filters) {
-        const deleteButtonId = `delete-${filter.name}`;
+        const deleteButtonId = `delete-${filter.id}`;
         filtersList.appendChild(fromHTML(
             `
             <li>
@@ -32,7 +34,7 @@ const updatePopupFilterList = (filters) => {
             </li>`
             )
         );
-        document.getElementById(deleteButtonId).addEventListener("click", () => deleteFilter(filter.name));
+        document.getElementById(deleteButtonId).addEventListener("click", () => deleteFilter(filter.id));
     }
 }
 
@@ -49,10 +51,10 @@ const updateFilters = async (newFilters) => {
     updatePopupFilterList(filtersAfterUpdate);
 }
 
-const deleteFilter = async (filterName) => {
+const deleteFilter = async (filterId) => {
     const currentFilters = await getCurrentFilters();
     const newFilters = {
-        filters: currentFilters.filter((filter) => filter.name !== filterName),
+        filters: currentFilters.filter((filter) => filter.id !== filterId),
     }
     await updateFilters(newFilters);
 }
@@ -66,6 +68,7 @@ const createNewFilter = async () => {
         filters: [
             ...filters,
             {
+                id: generateUniqueId(),
                 name,
                 ghQueryString
             }
