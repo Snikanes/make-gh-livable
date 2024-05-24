@@ -21,17 +21,32 @@ const updateFilterList = (filters) => {
     while (filtersList.firstChild) {
         filtersList.removeChild(filtersList.lastChild);
     }
-    // TODO: Add delete button for each filter
     for (const filter of filters) {
+        const deleteButtonId = `delete-${filter.name}`;
         filtersList.appendChild(fromHTML(
             `
             <li>
                 <p>${filter.name}</p>
                 <pre>${filter.ghQueryString}</pre>
+                <button id="${deleteButtonId}">Slett</button>
             </li>`
             )
         );
+        document.getElementById(deleteButtonId).addEventListener("click", () => deleteFilter(filter.name));
     }
+}
+
+const deleteFilter = async (filterName) => {
+    const result = await chrome.storage.local.get(STORAGE_KEY);
+    let existingFilters = result[STORAGE_KEY]?.filters ?? []
+    const updatedFilters = {
+        filters: existingFilters.filter((filter) => filter.name !== filterName),
+    }
+    await chrome.storage.local.set({
+        [STORAGE_KEY]: updatedFilters
+    });
+    const filtersAfterUpdate = (await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY]?.filters ?? [];
+    updateFilterList(filtersAfterUpdate);
 }
 
 const createNewFilter = async () => {
