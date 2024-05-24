@@ -26,10 +26,11 @@ function fromHTML(html, trim = true) {
     return result;
 }
 
-
-const mo = new MutationObserver(onMutation);
-observe();
-
+let mo;
+refreshFilters().then(() => {
+    mo = new MutationObserver(onMutation);
+    observe();
+})
 
 async function onMutation() {
     if (document.querySelector("nav.subnav-links")) {
