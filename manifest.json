@@ -1,0 +1,26 @@
+{
+  "name": "Make GitHub livable",
+  "description": "Extension description",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": [
+    "tabs",
+    "storage",
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
+        "contentScript.js"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
